@@ -234,7 +234,7 @@ Benchmarked across all 10 banking incident scenarios using `python scripts/evalu
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/bank-app.git
+git clone https://github.com/KOwshik222/bank_app.git
 cd bank-app
 
 # Create virtual environment
