@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BankOps AI — Banking Incident Resolution Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #07090e;
+      --bg-surface: #0d121f;
+      --bg-card: rgba(18, 24, 40, 0.75);
+      --bg-card-hover: rgba(28, 38, 62, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(56, 189, 248, 0.3);
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.25);
+      --indigo: #6366f1;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-base);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.07) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.07) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.04) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Navbar */
+    header {
+      background: rgba(13, 18, 31, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--emerald);
+      font-family: var(--font-mono);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .status-pulse {
+      width: 8px;
+      height: 8px;
+      background: var(--emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+    }
+
+    .role-badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .role-badge strong {
+      color: var(--text-main);
+    }
+
+    /* KPI Stats Bar */
+    .kpi-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem 2rem 0.5rem 2rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.1rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-accent);
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .kpi-val {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+    }
+
+    .kpi-card.critical .kpi-val { color: var(--rose); }
+    .kpi-card.warning .kpi-val { color: var(--amber); }
+    .kpi-card.success .kpi-val { color: var(--emerald); }
+    .kpi-card.primary .kpi-val { color: var(--primary); }
+
+    /* Main Split Layout */
+    .main-content {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem 2rem;
+      flex: 1;
+    }
+
+    @media (max-width: 1024px) {
+      .main-content { grid-template-columns: 1fr; }
+    }
+
+    /* Left Column: Scenarios & Incident List */
+    .sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .panel-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Scenario Trigger */
+    .scenario-select {
+      width: 100%;
+      background: rgba(13, 18, 31, 0.9);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      outline: none;
+    }
+
+    .scenario-select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #fff;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #0284c7);
+      box-shadow: 0 0 25px var(--primary-glow);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      box-shadow: 0 0 15px var(--emerald-glow);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #e11d48, #f43f5e);
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+    .btn-outline:hover {
+      border-color: var(--text-main);
+      color: var(--text-main);
+    }
+
+    /* Incident Queue List */
+    .incident-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .incident-item {
+      background: rgba(13, 18, 31, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .incident-item:hover, .incident-item.selected {
+      background: var(--bg-card-hover);
+      border-color: var(--primary);
+      transform: translateX(3px);
+    }
+
+    .incident-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .incident-num {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-critical { background: rgba(244, 63, 94, 0.2); color: var(--rose); border: 1px solid rgba(244, 63, 94, 0.4); }
+    .badge-high { background: rgba(245, 158, 11, 0.2); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.4); }
+    .badge-medium { background: rgba(56, 189, 248, 0.2); color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-resolved { background: rgba(16, 185, 129, 0.2); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-status { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+
+    .incident-item-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .incident-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    /* Right Column: Active Incident Details & AI Investigation */
+    .detail-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .detail-header-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .detail-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.85rem;
+    }
+
+    .detail-id {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-bottom: 0.35rem;
+    }
+
+    .detail-title {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .detail-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    /* AI Stepper Section */
+    .investigation-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .step-node {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(13, 18, 31, 0.5);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: all 0.3s;
+    }
+
+    .step-node.active {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.06);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+    }
+
+    .step-node.completed {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.04);
+    }
+
+    .step-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+    }
+
+    .step-node.active .step-icon {
+      background: var(--primary);
+      color: #000;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .step-node.completed .step-icon {
+      background: var(--emerald);
+      color: #fff;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .step-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .step-evidence-list {
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      color: #bae6fd;
+      font-family: var(--font-mono);
+      list-style-type: square;
+      padding-left: 1.1rem;
+    }
+
+    /* RCA Synthesis Highlight Box */
+    .rca-box {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(99, 102, 241, 0.12));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-top: 1.25rem;
+      display: none;
+    }
+
+    .rca-box.visible {
+      display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .rca-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+
+    .rca-root-cause {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+    }
+
+    .rca-remediation-rec {
+      font-size: 0.88rem;
+      background: rgba(0, 0, 0, 0.35);
+      border-left: 3px solid var(--emerald);
+      padding: 0.65rem 0.85rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-top: 0.65rem;
+    }
+
+    /* Tabs Section */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+    }
+
+    .tab-pane {
+      display: none;
+      padding-top: 1rem;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Timeline Audit */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .timeline-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+      border-left: 2px solid var(--border-subtle);
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    .timeline-entry::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .timeline-actor {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .timeline-time {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      margin-left: auto;
+      font-family: var(--font-mono);
+    }
+
+    /* RAG Citations */
+    .citation-card {
+      background: rgba(13, 18, 31, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .citation-title {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .citation-source {
+      font-size: 0.72rem;
+      color: var(--text-faint);
+      font-family: var(--font-mono);
+      margin-top: 0.2rem;
+    }
+
+    .citation-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">B</div>
+      <div class="brand-title">
+        BankOps AI
+        <span class="brand-badge">Incident Command</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-indicator">
+        <div class="status-pulse"></div>
+        <span>AI AGENT PLATFORM ONLINE</span>
+      </div>
+      <div class="role-badge">
+        <span>Operator:</span>
+        <strong id="current-user">L3 Incident Commander</strong>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI Metrics Bar -->
+  <div class="kpi-container">
+    <div class="kpi-card primary">
+      <div class="kpi-label">Active Incidents</div>
+      <div class="kpi-val" id="kpi-open">0</div>
+    </div>
+    <div class="kpi-card critical">
+      <div class="kpi-label">Critical Severity</div>
+      <div class="kpi-val" id="kpi-critical">0</div>
+    </div>
+    <div class="kpi-card warning">
+      <div class="kpi-label">Awaiting Approval</div>
+      <div class="kpi-val" id="kpi-approval">0</div>
+    </div>
+    <div class="kpi-card success">
+      <div class="kpi-label">AI Resolved</div>
+      <div class="kpi-val" id="kpi-resolved">0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">AI Success Rate</div>
+      <div class="kpi-val" id="kpi-success-rate">98.4%</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Left Sidebar: Simulator & Queue -->
+    <div class="sidebar-panel">
+
+      <!-- Scenario Launcher -->
+      <div class="panel-card">
+        <div class="panel-title">
+          <span>Trigger Incident Scenario</span>
+          <span class="badge badge-medium">10 Scenarios</span>
+        </div>
+        <select id="scenario-selector" class="scenario-select">
+          <option value="">Loading scenarios...</option>
+        </select>
+        <button id="btn-trigger-scenario" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Inject Banking Anomaly
+        </button>
+      </div>
+
+      <!-- Incident Queue -->
+      <div class="panel-card" style="flex: 1;">
+        <div class="panel-title">
+          <span>Incident Queue</span>
+          <span id="incident-count-badge" class="badge badge-status">0 Total</span>
+        </div>
+        <div id="incident-queue" class="incident-list">
+          <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 2rem;">
+            Loading active banking incidents...
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Main Column: Detail & Investigation -->
+    <div class="detail-panel">
+
+      <!-- Detail Header Card -->
+      <div class="detail-header-card">
+        <div class="detail-top-row">
+          <div>
+            <div id="active-inc-num" class="detail-id">SELECT AN INCIDENT</div>
+            <h1 id="active-inc-title" class="detail-title">No Incident Selected</h1>
+          </div>
+          <div class="detail-actions" id="header-action-buttons">
+            <button id="btn-start-investigation" class="btn btn-primary" style="display:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              Run AI Multi-Agent RCA
+            </button>
+            <button id="btn-approve-fix" class="btn btn-success" style="display:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
+              Approve Remediation
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <span id="active-inc-severity" class="badge badge-medium">SEVERITY</span>
+          <span id="active-inc-status" class="badge badge-status">STATUS</span>
+          <span id="active-inc-service" class="badge badge-status">SERVICE</span>
+        </div>
+
+        <p id="active-inc-desc" class="detail-desc">
+          Select an incident from the queue on the left or inject a simulated anomaly to watch the AI multi-agent platform investigate, locate root cause, and formulate remediation.
+        </p>
+
+        <!-- RCA Box -->
+        <div id="rca-box" class="rca-box">
+          <div class="rca-header">
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary); letter-spacing: 0.05em;">
+              Definitive AI Root Cause Analysis
+            </span>
+            <span id="rca-confidence-badge" class="badge badge-resolved">94% Confidence</span>
+          </div>
+          <div id="rca-root-cause-text" class="rca-root-cause">...</div>
+          <div class="rca-remediation-rec">
+            <strong>Recommended Action:</strong>
+            <span id="rca-remediation-text">...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Stepper -->
+      <div class="investigation-card">
+        <div class="panel-title">
+          <span>AI Investigation Stepper</span>
+          <span id="investigation-status-pill" class="badge badge-status">Standby</span>
+        </div>
+
+        <div class="stepper" id="stepper-container">
+          <div class="step-node" id="step-1">
+            <div class="step-icon">1</div>
+            <div class="step-content">
+              <div class="step-title"><span>Log Analysis Agent</span> <span class="badge badge-status">Pending</span></div>
+              <div class="step-desc">Searches stack traces, error rate spikes, and exception signatures</div>
+            </div>
+          </div>
+          <div class="step-node" id="step-2">
+            <div class="step-icon">2</div>
+            <div class="step-content">
+              <div class="step-title"><span>Infrastructure & ML Agent</span> <span class="badge badge-status">Pending</span></div>
+              <div class="step-desc">Evaluates CPU, memory, and computes Isolation Forest anomaly scores</div>
+            </div>
+          </div>
+          <div class="step-node" id="step-3">
+            <div class="step-icon">3</div>
+            <div class="step-content">
+              <div class="step-title"><span>Database Analysis Agent</span> <span class="badge badge-status">Pending</span></div>
+              <div class="step-desc">Inspects connection pool utilization, deadlocks, and slow query latency</div>
+            </div>
+          </div>
+          <div class="step-node" id="step-4">
+            <div class="step-icon">4</div>
+            <div class="step-content">
+              <div class="step-title"><span>API & Latency Agent</span> <span class="badge badge-status">Pending</span></div>
+              <div class="step-desc">Validates HTTP error codes, circuit breaker trip states, and P99 latency</div>
+            </div>
+          </div>
+          <div class="step-node" id="step-5">
+            <div class="step-icon">5</div>
+            <div class="step-content">
+              <div class="step-title"><span>Deployment Analysis Agent</span> <span class="badge badge-status">Pending</span></div>
+              <div class="step-desc">Correlates recent CI/CD releases and configuration changes</div>
+            </div>
+          </div>
+          <div class="step-node" id="step-6">
+            <div class="step-icon">6</div>
+            <div class="step-content">
+              <div class="step-title"><span>Knowledge RAG Agent</span> <span class="badge badge-status">Pending</span></div>
+              <div class="step-desc">Queries Qdrant vector database for matching runbooks and past incidents</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabbed Evidence & Audit Panel -->
+      <div class="investigation-card">
+        <div class="tabs-nav">
+          <button class="tab-btn active" onclick="switchTab('tab-evidence')">Cross-Agent Evidence</button>
+          <button class="tab-btn" onclick="switchTab('tab-citations')">RAG Runbook Citations</button>
+          <button class="tab-btn" onclick="switchTab('tab-audit')">Immutable Audit Trail</button>
+        </div>
+
+        <!-- Evidence Tab -->
+        <div id="tab-evidence" class="tab-pane active">
+          <div id="evidence-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <div style="color: var(--text-faint); font-size: 0.85rem;">No evidence collected yet. Start an investigation to observe real-time findings.</div>
+          </div>
+        </div>
+
+        <!-- RAG Citations Tab -->
+        <div id="tab-citations" class="tab-pane">
+          <div id="citations-container">
+            <div style="color: var(--text-faint); font-size: 0.85rem;">Runbooks will be populated when Knowledge RAG Agent queries the vector store.</div>
+          </div>
+        </div>
+
+        <!-- Audit Trail Tab -->
+        <div id="tab-audit" class="tab-pane">
+          <div id="audit-container" class="timeline">
+            <div style="color: var(--text-faint); font-size: 0.85rem;">Audit events recorded by AI agents and operators will appear here.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let activeIncident = null;
+    let scenarios = [];
+
+    async function initDashboard() {
+      await loadStats();
+      await loadScenarios();
+      await loadIncidents();
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/incidents/stats');
+        if (res.ok) {
+          const stats = await res.json();
+          document.getElementById('kpi-open').textContent = stats.open_incidents || 0;
+          document.getElementById('kpi-critical').textContent = stats.critical_incidents || 0;
+          document.getElementById('kpi-approval').textContent = stats.awaiting_approval || 0;
+          document.getElementById('kpi-resolved').textContent = stats.resolved_incidents || 0;
+          if (stats.ai_success_rate !== null) {
+            document.getElementById('kpi-success-rate').textContent = Math.round(stats.ai_success_rate) + '%';
+          }
+        }
+      } catch (err) {
+        console.error('Stats load error:', err);
+      }
+    }
+
+    async function loadScenarios() {
+      try {
+        const res = await fetch('/api/ai/scenarios');
+        if (res.ok) {
+          scenarios = await res.json();
+          const sel = document.getElementById('scenario-selector');
+          sel.innerHTML = scenarios.map(s => `
+            <option value="${s.scenario_key}">
+              [${s.severity}] ${s.title} (${s.affected_service})
+            </option>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Scenarios load error:', err);
+      }
+    }
+
+    async function loadIncidents() {
+      try {
+        const res = await fetch('/api/incidents/?limit=20');
+        if (res.ok) {
+          const incidents = await res.json();
+          document.getElementById('incident-count-badge').textContent = `${incidents.length} Total`;
+          const list = document.getElementById('incident-queue');
+          if (!incidents.length) {
+            list.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--text-muted);">No incidents found. Inject one using the button above!</div>`;
+            return;
+          }
+
+          list.innerHTML = incidents.map(inc => `
+            <div class="incident-item ${activeIncident && activeIncident.id === inc.id ? 'selected' : ''}" onclick="selectIncident('${inc.id}')">
+              <div class="incident-item-header">
+                <span class="incident-num">${inc.incident_number}</span>
+                <span class="badge ${getSeverityBadge(inc.severity)}">${inc.severity}</span>
+              </div>
+              <div class="incident-item-title">${inc.title}</div>
+              <div class="incident-item-meta">
+                <span>${inc.affected_service}</span>
+                <span class="badge badge-status">${inc.status}</span>
+              </div>
+            </div>
+          `).join('');
+
+          if (!activeIncident && incidents.length > 0) {
+            selectIncident(incidents[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Incidents load error:', err);
+      }
+    }
+
+    function getSeverityBadge(sev) {
+      if (sev === 'CRITICAL') return 'badge-critical';
+      if (sev === 'HIGH') return 'badge-high';
+      return 'badge-medium';
+    }
+
+    async function selectIncident(incId) {
+      try {
+        const res = await fetch(`/api/incidents/${incId}`);
+        if (res.ok) {
+          activeIncident = await res.json();
+          renderActiveIncident();
+        }
+      } catch (err) {
+        console.error('Error fetching incident:', err);
+      }
+    }
+
+    function renderActiveIncident() {
+      if (!activeIncident) return;
+
+      document.getElementById('active-inc-num').textContent = activeIncident.incident_number;
+      document.getElementById('active-inc-title').textContent = activeIncident.title;
+      document.getElementById('active-inc-desc').textContent = activeIncident.description;
+      document.getElementById('active-inc-service').textContent = activeIncident.affected_service;
+
+      const sevBadge = document.getElementById('active-inc-severity');
+      sevBadge.className = `badge ${getSeverityBadge(activeIncident.severity)}`;
+      sevBadge.textContent = activeIncident.severity;
+
+      const statBadge = document.getElementById('active-inc-status');
+      statBadge.textContent = activeIncident.status;
+      if (activeIncident.status === 'RESOLVED') {
+        statBadge.className = 'badge badge-resolved';
+      } else if (activeIncident.status === 'AWAITING_APPROVAL') {
+        statBadge.className = 'badge badge-high';
+      } else {
+        statBadge.className = 'badge badge-status';
+      }
+
+      // Buttons
+      const btnInvestigate = document.getElementById('btn-start-investigation');
+      const btnApprove = document.getElementById('btn-approve-fix');
+
+      if (activeIncident.status === 'OPEN' || activeIncident.status === 'REOPENED') {
+        btnInvestigate.style.display = 'inline-flex';
+        btnInvestigate.textContent = 'Investigate with AI';
+        btnInvestigate.disabled = false;
+      } else {
+        btnInvestigate.style.display = 'none';
+      }
+
+      btnApprove.style.display = (activeIncident.status === 'AWAITING_APPROVAL') ? 'inline-flex' : 'none';
+
+      // Status pill & steps synchronization
+      if (activeIncident.status === 'AWAITING_APPROVAL') {
+        document.getElementById('investigation-status-pill').textContent = 'Awaiting Approval';
+        document.getElementById('investigation-status-pill').className = 'badge badge-high';
+        for (let i = 1; i <= 6; i++) {
+          const step = document.getElementById(`step-${i}`);
+          if (step) {
+            step.className = 'step-node completed';
+            const b = step.querySelector('.badge');
+            if (b) { b.textContent = 'Verified'; b.className = 'badge badge-resolved'; }
+          }
+        }
+      } else if (activeIncident.status === 'RESOLVED') {
+        document.getElementById('investigation-status-pill').textContent = 'Resolved';
+        document.getElementById('investigation-status-pill').className = 'badge badge-resolved';
+        for (let i = 1; i <= 6; i++) {
+          const step = document.getElementById(`step-${i}`);
+          if (step) {
+            step.className = 'step-node completed';
+            const b = step.querySelector('.badge');
+            if (b) { b.textContent = 'Verified'; b.className = 'badge badge-resolved'; }
+          }
+        }
+      }
+
+      // RCA Box
+      const rcaBox = document.getElementById('rca-box');
+      if (activeIncident.root_cause) {
+        rcaBox.classList.add('visible');
+        document.getElementById('rca-root-cause-text').textContent = activeIncident.root_cause;
+        document.getElementById('rca-remediation-text').textContent = activeIncident.recommended_remediation || 'Apply recommended remediation and verify service health';
+        if (activeIncident.root_cause_confidence) {
+          document.getElementById('rca-confidence-badge').textContent = `${Math.round(activeIncident.root_cause_confidence * 100)}% Confidence`;
+        }
+
+      } else {
+        rcaBox.classList.remove('visible');
+      }
+
+      // Render existing evidence
+      renderEvidence();
+      loadAudit(activeIncident.id);
+    }
+
+    function renderEvidence() {
+      const container = document.getElementById('evidence-container');
+      const items = activeIncident.evidence_items || [];
+      if (!items.length) {
+        container.innerHTML = `<div style="color:var(--text-faint); font-size:0.85rem;">No evidence items attached yet. Run AI investigation.</div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(ev => `
+        <div class="citation-card">
+          <div class="citation-title">
+            <span>${ev.title}</span>
+            <span class="badge badge-medium">${ev.evidence_type}</span>
+          </div>
+          <div class="citation-source">Source: ${ev.source_agent}</div>
+          <div class="citation-text">${ev.content}</div>
+        </div>
+      `).join('');
+    }
+
+    async function loadAudit(incId) {
+      try {
+        const res = await fetch(`/api/audit/incident/${incId}`);
+        if (res.ok) {
+          const logs = await res.json();
+          const cont = document.getElementById('audit-container');
+          if (!logs.length) {
+            cont.innerHTML = `<div style="color:var(--text-faint); font-size:0.85rem;">No audit logs yet.</div>`;
+            return;
+          }
+          cont.innerHTML = logs.map(l => `
+            <div class="timeline-entry">
+              <div>
+                <span class="timeline-actor">${l.actor} (${l.actor_type}):</span>
+                <span>${l.description}</span>
+              </div>
+              <span class="timeline-time">${new Date(l.timestamp).toLocaleTimeString()}</span>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Audit load error:', err);
+      }
+    }
+
+    // Trigger Scenario
+    document.getElementById('btn-trigger-scenario').addEventListener('click', async () => {
+      const scenarioKey = document.getElementById('scenario-selector').value;
+      const scenario = scenarios.find(s => s.scenario_key === scenarioKey);
+      if (!scenario) return;
+
+      const btn = document.getElementById('btn-trigger-scenario');
+      btn.disabled = true;
+      btn.textContent = 'Injecting Anomaly...';
+
+      try {
+        const res = await fetch('/api/incidents/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: scenario.title,
+            description: scenario.description,
+            severity: scenario.severity,
+            affected_service: scenario.affected_service,
+            category: scenario.category || "APPLICATION",
+            reported_by: "synthetic-monitoring-probe"
+          })
+        });
+
+        if (res.ok) {
+          const newInc = await res.json();
+          newInc.scenario_key = scenarioKey;
+          await loadStats();
+          await loadIncidents();
+          await selectIncident(newInc.id);
+        }
+      } catch (err) {
+        console.error('Trigger scenario error:', err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Inject Banking Anomaly`;
+      }
+    });
+
+    // Start Investigation (SSE Streaming)
+    document.getElementById('btn-start-investigation').addEventListener('click', async () => {
+      if (!activeIncident) return;
+
+      const incId = activeIncident.id;
+      const btn = document.getElementById('btn-start-investigation');
+      btn.disabled = true;
+      btn.textContent = 'Investigating...';
+
+      // Reset Stepper
+      for (let i = 1; i <= 6; i++) {
+        const step = document.getElementById(`step-${i}`);
+        step.className = 'step-node';
+        step.querySelector('.badge').textContent = 'Pending';
+        step.querySelector('.badge').className = 'badge badge-status';
+      }
+
+      document.getElementById('investigation-status-pill').textContent = 'Agents Running';
+      document.getElementById('investigation-status-pill').className = 'badge badge-high';
+
+      // SSE Stream - pass scenario_key if known
+      let streamUrl = `/api/ai/investigate/${incId}/stream`;
+      const matched = scenarios.find(s => s.title === activeIncident.title || activeIncident.title.includes(s.title));
+      const scKey = activeIncident.scenario_key || (matched ? matched.scenario_key : null);
+      if (scKey) {
+        streamUrl += `?scenario_key=${encodeURIComponent(scKey)}`;
+      }
+      const eventSource = new EventSource(streamUrl);
+
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'STEP_START') {
+          const step = document.getElementById(`step-${data.step}`);
+          if (step) {
+            step.className = 'step-node active';
+            step.querySelector('.badge').textContent = 'Analyzing';
+            step.querySelector('.badge').className = 'badge badge-medium';
+          }
+        } else if (data.type === 'STEP_COMPLETE') {
+          const step = document.getElementById(`step-${data.step}`);
+          if (step) {
+            step.className = 'step-node completed';
+            step.querySelector('.badge').textContent = 'Verified';
+            step.querySelector('.badge').className = 'badge badge-resolved';
+            step.querySelector('.step-desc').textContent = data.hypothesis;
+          }
+        } else if (data.type === 'INVESTIGATION_COMPLETE') {
+          eventSource.close();
+          btn.disabled = false;
+          btn.style.display = 'none';
+
+          document.getElementById('investigation-status-pill').textContent = 'Awaiting Approval';
+          document.getElementById('investigation-status-pill').className = 'badge badge-high';
+
+          // Show RCA Box
+          const rcaBox = document.getElementById('rca-box');
+          rcaBox.classList.add('visible');
+          document.getElementById('rca-root-cause-text').textContent = data.root_cause;
+          document.getElementById('rca-remediation-text').textContent = data.recommended_remediation;
+          document.getElementById('rca-confidence-badge').textContent = `${Math.round(data.confidence * 100)}% Confidence`;
+
+          document.getElementById('btn-approve-fix').style.display = 'inline-flex';
+
+          loadStats();
+          loadIncidents();
+          selectIncident(incId);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        btn.disabled = false;
+        btn.textContent = 'Investigate with AI';
+        selectIncident(incId);
+      };
+    });
+
+    // Approve & Remediate
+    document.getElementById('btn-approve-fix').addEventListener('click', async () => {
+      if (!activeIncident) return;
+      const incId = activeIncident.id;
+
+      const btn = document.getElementById('btn-approve-fix');
+      btn.disabled = true;
+      btn.textContent = 'Executing Fix...';
+
+      try {
+        // 1. Approve
+        await fetch(`/api/incidents/${incId}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            decision: 'approve',
+            approved_by: 'IncidentCommander-Sarah'
+          })
+        });
+
+        // 2. Remediate & Verify
+        const remRes = await fetch(`/api/ai/remediate/${incId}?approved_by=IncidentCommander-Sarah`, {
+          method: 'POST'
+        });
+
+        if (remRes.ok) {
+          await loadStats();
+          await loadIncidents();
+          await selectIncident(incId);
+          alert('Remediation verified! System normalized and incident marked RESOLVED.');
+        }
+      } catch (err) {
+        console.error('Remediation error:', err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', initDashboard);
+  </script>
+</body>
+</html>
